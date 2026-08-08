@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>UnChat</title>
+<title>BhiChat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1045,10 +1045,10 @@ body::before {
     <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
     <div class="titlebar">
       <span class="tlight r"></span><span class="tlight y"></span><span class="tlight g"></span>
-      <span class="titletext">root@nicolas:~</span>
+      <span class="titletext">root@bhichat:~</span>
     </div>
     <div class="board-body">
-      <div class="brand">UNCHAT<span class="cursor-blink"></span></div>
+      <div class="brand">BHICHAT<span class="cursor-blink"></span></div>
       <div class="field" id="room-field">
         <label>Channel</label>
         <input id="room-input" type="text" placeholder="markas-tim" maxlength="40" autocomplete="off">
@@ -1065,7 +1065,7 @@ body::before {
     <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
     <div class="titlebar">
       <span class="tlight r"></span><span class="tlight y"></span><span class="tlight g"></span>
-      <span class="titletext">root@nicolas:~</span>
+      <span class="titletext">root@bhichat:~</span>
     </div>
     <div class="chat-header">
       <div class="header-info">
@@ -1120,6 +1120,7 @@ body::before {
   var fadeTimeouts = {};
   var onlineUsers = {};
   var myName = '';
+  var userLastSeen = {};
 
   var cache = {
     get: function(k) { return sessionStorage.getItem('cachechat_' + k); },
@@ -1137,6 +1138,7 @@ body::before {
 
   var source = null;
   var currentTopic = null;
+  var keepAliveInterval = null;
 
   function escapeHtml(s) {
     return s.replace(/[&<>"']/g, function(c) {
@@ -1165,7 +1167,7 @@ body::before {
     if (count <= 3) {
       display = names.join(', ');
     } else {
-      display = names.slice(0, 3).join(', ') + ', dan ' + (count - 3) + ' lainnya';
+      display = names.slice(0, 3).join(', ') + ' & ' + (count - 3) + ' lainnya';
     }
     onlineUsersEl.textContent = ' | ' + display;
   }
@@ -1268,16 +1270,24 @@ body::before {
 
   function handleIncoming(data) {
     if (!data || !data.type) return;
+    var now = Date.now();
     if (data.type === 'chat' && data.m && data.u) {
       addChatMessage(data);
+      userLastSeen[data.u] = now;
     } else if (data.type === 'join' && data.u) {
       onlineUsers[data.u] = true;
+      userLastSeen[data.u] = now;
       updateOnlineUsers();
-      addLogLine(data.u + ' bergabung ke channel', 'join');
+      if (data.u !== myName) {
+        addLogLine(data.u + ' bergabung ke channel', 'join');
+      }
     } else if (data.type === 'leave' && data.u) {
       delete onlineUsers[data.u];
+      delete userLastSeen[data.u];
       updateOnlineUsers();
-      addLogLine(data.u + ' keluar dari channel', 'leave');
+      if (data.u !== myName) {
+        addLogLine(data.u + ' keluar dari channel', 'leave');
+      }
     }
   }
 
@@ -1298,11 +1308,22 @@ body::before {
     });
   }
 
+  function sendKeepAlive() {
+    if (currentTopic && myName) {
+      publish(currentTopic, { type: 'ping', u: myName, t: Date.now(), c: clientId });
+    }
+  }
+
   function connect(room, name) {
     myName = name;
     onlineUsers = {};
     onlineUsers[name] = true;
     updateOnlineUsers();
+
+    if (keepAliveInterval) {
+      clearInterval(keepAliveInterval);
+      keepAliveInterval = null;
+    }
 
     var topic = 'cachechat-v1-' + slugify(room);
     currentTopic = topic;
@@ -1320,6 +1341,7 @@ body::before {
       if (!joined) {
         joined = true;
         publish(topic, { type: 'join', u: name, t: Date.now(), c: clientId });
+        keepAliveInterval = setInterval(sendKeepAlive, 15000);
       }
     };
 
@@ -1333,6 +1355,15 @@ body::before {
         var payload = JSON.parse(evt.data);
         if (payload.event !== 'message' || !payload.message) return;
         var data = JSON.parse(payload.message);
+        if (data.type === 'ping') {
+          userLastSeen[data.u] = Date.now();
+          if (data.u !== myName && !onlineUsers[data.u]) {
+            onlineUsers[data.u] = true;
+            updateOnlineUsers();
+            addLogLine(data.u + ' bergabung ke channel', 'join');
+          }
+          return;
+        }
         handleIncoming(data);
       } catch (e) {}
     };
@@ -1494,6 +1525,10 @@ body::before {
     }
     if (source) source.close();
     source = null;
+    if (keepAliveInterval) {
+      clearInterval(keepAliveInterval);
+      keepAliveInterval = null;
+    }
     currentTopic = null;
     onlineUsers = {};
     updateOnlineUsers();
