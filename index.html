@@ -333,7 +333,7 @@ body::before {
     <div class="title">BhiChat</div>
     <div class="field" id="room-field">
       <label>Kode ruangan</label>
-      <input id="room-input" type="text" placeholder="misal: markas-tim" maxlength="40">
+      <input id="room-input" type="text" placeholder="bhitech" maxlength="40">
     </div>
     <div class="field" id="name-field">
       <label>Nama panggilan</label>
@@ -498,12 +498,17 @@ body::before {
     messagesEl.innerHTML = '';
     showEmptyState();
 
+    var joined = false;
+
     if (source) source.close();
     source = new EventSource('https://ntfy.sh/' + topic + '/sse');
 
     source.onopen = function () {
       setStatus('live', 'live');
-      addSystemLine(name + ' bergabung ke ruangan');
+      if (!joined) {
+        joined = true;
+        addSystemLine(name + ' bergabung ke ruangan');
+      }
     };
 
     source.onerror = function () {
