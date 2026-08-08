@@ -881,4 +881,49 @@ body::before {
     var room = roomInput.value.trim();
     var name = nameInput.value.trim();
     roomField.classList.toggle('err', !room);
-    nameField.classList.toggle('err', !
+    nameField.classList.toggle('err', !name);
+    if (!room || !name) return;
+    cache.set('room', room);
+    cache.set('name', name);
+    joinScreen.style.display = 'none';
+    chatScreen.classList.add('active');
+    connect(room, name);
+    msgInput.focus();
+  });
+
+  leaveBtn.addEventListener('click', function () {
+    if (currentTopic) {
+      publish(currentTopic, { type: 'leave', u: nameInput.value.trim(), t: Date.now(), c: clientId });
+    }
+    if (source) source.close();
+    source = null;
+    currentTopic = null;
+    chatScreen.classList.remove('active');
+    joinScreen.style.display = 'block';
+  });
+
+  sendBtn.addEventListener('click', function () {
+    sendMessage(msgInput.value);
+    msgInput.value = '';
+    msgInput.focus();
+  });
+
+  msgInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      sendMessage(msgInput.value);
+      msgInput.value = '';
+    }
+  });
+
+  roomInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') nameInput.focus();
+  });
+  nameInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') joinBtn.click();
+  });
+
+  document.addEventListener('touchstart', function() {}, { passive: true });
+})();
+</script>
+</body>
+</html>
