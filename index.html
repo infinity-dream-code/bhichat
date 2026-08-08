@@ -64,10 +64,12 @@ body::before {
   border-radius: 6px;
   box-shadow: 0 24px 70px rgba(0,0,0,0.6);
   animation: riseIn 0.35s ease;
+  height: 100%;
   max-height: 100vh;
   max-height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 .corner {
   position: absolute;
@@ -172,16 +174,21 @@ body::before {
 }
 .btn:hover { box-shadow: 0 8px 22px rgba(255, 183, 3, 0.3); }
 .btn:active { transform: scale(0.98); }
+
 #chat-screen {
   display: none;
   width: 100%;
   max-width: 460px;
   flex-direction: column;
   flex: 1;
-  max-height: 100vh;
-  max-height: 100dvh;
+  height: 100%;
+  min-height: 0;
 }
-#chat-screen.active { display: flex; animation: riseIn 0.35s ease; }
+#chat-screen.active { 
+  display: flex; 
+  animation: riseIn 0.35s ease; 
+}
+
 .chat-header {
   display: flex;
   align-items: center;
@@ -221,8 +228,9 @@ body::before {
   flex-shrink: 0;
 }
 .leave:hover { border-color: var(--red); color: var(--red); }
+
 #messages {
-  flex: 1;
+  flex: 1 1 auto;
   overflow-y: auto;
   padding: 14px 16px;
   display: flex;
@@ -230,11 +238,13 @@ body::before {
   gap: 10px;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  min-height: 0;
+  min-height: 50px;
+  max-height: 100%;
   -webkit-overflow-scrolling: touch;
 }
 #messages::-webkit-scrollbar { width: 4px; }
 #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
 .empty-state {
   margin: auto;
   text-align: center;
@@ -243,6 +253,7 @@ body::before {
   line-height: 1.8;
 }
 .empty-state .glyph { color: var(--amber-dim); margin-bottom: 6px; }
+
 .row {
   display: flex;
   align-items: flex-start;
@@ -311,6 +322,7 @@ body::before {
 .logline.join { color: var(--green); }
 .logline.leave { color: var(--red); }
 .logline.error { color: var(--red); }
+
 .composer {
   display: flex;
   align-items: center;
@@ -869,49 +881,4 @@ body::before {
     var room = roomInput.value.trim();
     var name = nameInput.value.trim();
     roomField.classList.toggle('err', !room);
-    nameField.classList.toggle('err', !name);
-    if (!room || !name) return;
-    cache.set('room', room);
-    cache.set('name', name);
-    joinScreen.style.display = 'none';
-    chatScreen.classList.add('active');
-    connect(room, name);
-    msgInput.focus();
-  });
-
-  leaveBtn.addEventListener('click', function () {
-    if (currentTopic) {
-      publish(currentTopic, { type: 'leave', u: nameInput.value.trim(), t: Date.now(), c: clientId });
-    }
-    if (source) source.close();
-    source = null;
-    currentTopic = null;
-    chatScreen.classList.remove('active');
-    joinScreen.style.display = 'block';
-  });
-
-  sendBtn.addEventListener('click', function () {
-    sendMessage(msgInput.value);
-    msgInput.value = '';
-    msgInput.focus();
-  });
-
-  msgInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-      sendMessage(msgInput.value);
-      msgInput.value = '';
-    }
-  });
-
-  roomInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') nameInput.focus();
-  });
-  nameInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') joinBtn.click();
-  });
-
-  document.addEventListener('touchstart', function() {}, { passive: true });
-})();
-</script>
-</body>
-</html>
+    nameField.classList.toggle('err', !
