@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>BhiChat</title>
+<title>UnChat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -287,6 +287,10 @@ body::before {
   font-size: 8px;
   letter-spacing: 0.3px;
   margin-top: 1px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 .status .off {
   color: var(--red);
@@ -296,6 +300,13 @@ body::before {
 }
 .status .live {
   color: var(--green);
+}
+.status .online-users {
+  color: var(--text-dim);
+  font-size: 7px;
+}
+.status .online-users .uname {
+  color: var(--cyan);
 }
 .leave {
   background: none;
@@ -618,6 +629,9 @@ body::before {
   .status {
     font-size: 10.5px;
   }
+  .status .online-users {
+    font-size: 9px;
+  }
   .leave {
     font-size: 10.5px;
     padding: 7px 11px;
@@ -766,6 +780,9 @@ body::before {
   .status {
     font-size: 7px;
   }
+  .status .online-users {
+    font-size: 6px;
+  }
   .leave {
     font-size: 8px;
     padding: 3px 6px;
@@ -829,6 +846,9 @@ body::before {
   }
   .status {
     font-size: 6px;
+  }
+  .status .online-users {
+    font-size: 5px;
   }
   .leave {
     font-size: 7px;
@@ -952,6 +972,9 @@ body::before {
   .status {
     font-size: 6px;
   }
+  .status .online-users {
+    font-size: 5px;
+  }
   .leave {
     font-size: 7px;
     padding: 2px 4px;
@@ -1022,10 +1045,10 @@ body::before {
     <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
     <div class="titlebar">
       <span class="tlight r"></span><span class="tlight y"></span><span class="tlight g"></span>
-      <span class="titletext">root@bhichat:~</span>
+      <span class="titletext">root@nicolas:~</span>
     </div>
     <div class="board-body">
-      <div class="brand">BHICHAT<span class="cursor-blink"></span></div>
+      <div class="brand">UNCHAT<span class="cursor-blink"></span></div>
       <div class="field" id="room-field">
         <label>Channel</label>
         <input id="room-input" type="text" placeholder="markas-tim" maxlength="40" autocomplete="off">
@@ -1042,12 +1065,15 @@ body::before {
     <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
     <div class="titlebar">
       <span class="tlight r"></span><span class="tlight y"></span><span class="tlight g"></span>
-      <span class="titletext">root@bhichat:~</span>
+      <span class="titletext">root@nicolas:~</span>
     </div>
     <div class="chat-header">
       <div class="header-info">
         <div class="room-tag" id="room-label"></div>
-        <div class="status"><span class="connecting" id="status-text">[connecting]</span></div>
+        <div class="status">
+          <span class="connecting" id="status-text">[connecting]</span>
+          <span class="online-users" id="online-users"></span>
+        </div>
       </div>
       <button class="leave" id="leave-btn">exit</button>
     </div>
@@ -1079,6 +1105,7 @@ body::before {
   var leaveBtn = document.getElementById('leave-btn');
   var roomLabel = document.getElementById('room-label');
   var statusText = document.getElementById('status-text');
+  var onlineUsersEl = document.getElementById('online-users');
   var messagesEl = document.getElementById('messages');
   var msgInput = document.getElementById('msg-input');
   var sendBtn = document.getElementById('send-btn');
@@ -1091,6 +1118,8 @@ body::before {
   var lastUploadTime = 0;
   var tagColors = ['--amber', '--cyan', '--green', '--red'];
   var fadeTimeouts = {};
+  var onlineUsers = {};
+  var myName = '';
 
   var cache = {
     get: function(k) { return sessionStorage.getItem('cachechat_' + k); },
@@ -1123,6 +1152,22 @@ body::before {
     var sum = 0;
     for (var i = 0; i < name.length; i++) sum += name.charCodeAt(i);
     return tagColors[sum % tagColors.length];
+  }
+
+  function updateOnlineUsers() {
+    var names = Object.keys(onlineUsers);
+    var count = names.length;
+    if (count === 0) {
+      onlineUsersEl.textContent = '';
+      return;
+    }
+    var display = '';
+    if (count <= 3) {
+      display = names.join(', ');
+    } else {
+      display = names.slice(0, 3).join(', ') + ', dan ' + (count - 3) + ' lainnya';
+    }
+    onlineUsersEl.textContent = ' | ' + display;
   }
 
   function clearEmptyState() {
@@ -1226,8 +1271,12 @@ body::before {
     if (data.type === 'chat' && data.m && data.u) {
       addChatMessage(data);
     } else if (data.type === 'join' && data.u) {
+      onlineUsers[data.u] = true;
+      updateOnlineUsers();
       addLogLine(data.u + ' bergabung ke channel', 'join');
     } else if (data.type === 'leave' && data.u) {
+      delete onlineUsers[data.u];
+      updateOnlineUsers();
       addLogLine(data.u + ' keluar dari channel', 'leave');
     }
   }
@@ -1250,15 +1299,22 @@ body::before {
   }
 
   function connect(room, name) {
+    myName = name;
+    onlineUsers = {};
+    onlineUsers[name] = true;
+    updateOnlineUsers();
+
     var topic = 'cachechat-v1-' + slugify(room);
     currentTopic = topic;
     roomLabel.textContent = '#' + room;
     setStatus('connecting', '[connecting]');
     messagesEl.innerHTML = '';
     addLogLine('menghubungkan ke #' + room + '...', 'info');
+
     var joined = false;
     if (source) source.close();
     source = new EventSource('https://ntfy.sh/' + topic + '/sse');
+
     source.onopen = function() {
       setStatus('live', '[online]');
       if (!joined) {
@@ -1266,10 +1322,12 @@ body::before {
         publish(topic, { type: 'join', u: name, t: Date.now(), c: clientId });
       }
     };
+
     source.onerror = function() {
       setStatus('off', '[offline]');
       addLogLine('koneksi terputus, mencoba lagi...', 'error');
     };
+
     source.onmessage = function(evt) {
       try {
         var payload = JSON.parse(evt.data);
@@ -1437,6 +1495,8 @@ body::before {
     if (source) source.close();
     source = null;
     currentTopic = null;
+    onlineUsers = {};
+    updateOnlineUsers();
     chatScreen.classList.remove('active');
     joinScreen.style.display = 'block';
   });
