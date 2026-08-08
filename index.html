@@ -333,7 +333,7 @@ body::before {
     <div class="title">BhiChat</div>
     <div class="field" id="room-field">
       <label>Kode ruangan</label>
-      <input id="room-input" type="text" placeholder="bhitech" maxlength="40">
+      <input id="room-input" type="text" placeholder="misal: markas-tim" maxlength="40">
     </div>
     <div class="field" id="name-field">
       <label>Nama panggilan</label>
@@ -442,7 +442,26 @@ body::before {
     scrollDown();
   }
 
-  function addMessage(data) {
+  function publish(topic, payload) {
+    return fetch('https://ntfy.sh/' + topic, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  function handleIncoming(data) {
+    if (!data || !data.type) return;
+    if (data.type === 'chat' && data.m && data.u) {
+      addChatMessage(data);
+    } else if (data.type === 'join' && data.u) {
+      addSystemLine(data.u + ' bergabung ke ruangan');
+    } else if (data.type === 'leave' && data.u) {
+      addSystemLine(data.u + ' keluar dari ruangan');
+    }
+  }
+
+  function addChatMessage(data) {
     clearEmptyState();
     var isOwn = data.c === clientId;
 
@@ -507,7 +526,7 @@ body::before {
       setStatus('live', 'live');
       if (!joined) {
         joined = true;
-        addSystemLine(name + ' bergabung ke ruangan');
+        publish(topic, { type: 'join', u: name, t: Date.now(), c: clientId });
       }
     };
 
@@ -520,20 +539,15 @@ body::before {
         var payload = JSON.parse(evt.data);
         if (payload.event !== 'message' || !payload.message) return;
         var data = JSON.parse(payload.message);
-        if (!data || !data.m || !data.u) return;
-        addMessage(data);
+        handleIncoming(data);
       } catch (e) {}
     };
   }
 
   function sendMessage(text) {
     if (!currentTopic || !text.trim()) return;
-    var payload = { u: nameInput.value.trim(), m: text.trim(), t: Date.now(), c: clientId };
-    fetch('https://ntfy.sh/' + currentTopic, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
-    }).catch(function () {
+    var payload = { type: 'chat', u: nameInput.value.trim(), m: text.trim(), t: Date.now(), c: clientId };
+    publish(currentTopic, payload).catch(function () {
       addSystemLine('gagal mengirim, cek koneksi internet');
     });
   }
@@ -553,6 +567,9 @@ body::before {
   });
 
   leaveBtn.addEventListener('click', function () {
+    if (currentTopic) {
+      publish(currentTopic, { type: 'leave', u: nameInput.value.trim(), t: Date.now(), c: clientId });
+    }
     if (source) source.close();
     source = null;
     currentTopic = null;
