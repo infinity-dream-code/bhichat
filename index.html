@@ -305,9 +305,6 @@ body::before {
   color: var(--text-dim);
   font-size: 7px;
 }
-.status .online-users .uname {
-  color: var(--cyan);
-}
 .leave {
   background: none;
   border: 1px solid var(--border);
@@ -567,8 +564,6 @@ body::before {
     transform: rotate(360deg);
   }
 }
-
-/* Desktop */
 @media (min-width: 769px) {
   .stage {
     padding: 20px;
@@ -691,8 +686,6 @@ body::before {
     font-size: 11px;
   }
 }
-
-/* Mobile */
 @media (max-width: 768px) {
   .stage {
     padding: 0;
@@ -823,7 +816,6 @@ body::before {
     font-size: 11px;
   }
 }
-
 @media (max-width: 400px) {
   .titlebar {
     padding: 3px 6px;
@@ -931,7 +923,6 @@ body::before {
     padding: 6px;
   }
 }
-
 @media (max-height: 500px) {
   .board-body {
     padding: 6px 8px 10px;
@@ -1060,7 +1051,6 @@ body::before {
       <button class="btn" id="join-btn">&gt; hubungkan</button>
     </div>
   </div>
-
   <div class="win" id="chat-screen">
     <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
     <div class="titlebar">
@@ -1092,7 +1082,6 @@ body::before {
     </div>
   </div>
 </div>
-
 <script>
 (function() {
   var joinScreen = document.getElementById('join-screen');
@@ -1112,7 +1101,6 @@ body::before {
   var fileInput = document.getElementById('file-upload');
   var uploadBtn = document.getElementById('upload-btn');
   var uploadSpinner = document.getElementById('upload-spinner');
-
   var IMGBB_API_KEY = 'df097cb85677d1f445b36e6f030d068f';
   var IMGBB_URL = 'https://api.imgbb.com/1/upload';
   var lastUploadTime = 0;
@@ -1122,21 +1110,17 @@ body::before {
   var myName = '';
   var userLastSeen = {};
   var cleanupInterval = null;
-
   var cache = {
     get: function(k) { return sessionStorage.getItem('cachechat_' + k); },
     set: function(k, v) { sessionStorage.setItem('cachechat_' + k, v); }
   };
-
   var clientId = cache.get('cid');
   if (!clientId) {
     clientId = Math.random().toString(36).slice(2, 10);
     cache.set('cid', clientId);
   }
-
   roomInput.value = cache.get('room') || '';
   nameInput.value = cache.get('name') || '';
-
   var source = null;
   var currentTopic = null;
   var keepAliveInterval = null;
@@ -1329,7 +1313,7 @@ body::before {
 
   function cleanupOfflineUsers() {
     var now = Date.now();
-    var timeout = 35000;
+    var timeout = 60000;
     var changed = false;
     for (var name in userLastSeen) {
       if (name === myName) continue;
@@ -1355,7 +1339,6 @@ body::before {
     userLastSeen = {};
     userLastSeen[name] = Date.now();
     updateOnlineUsers();
-
     if (keepAliveInterval) {
       clearInterval(keepAliveInterval);
       keepAliveInterval = null;
@@ -1364,33 +1347,28 @@ body::before {
       clearInterval(cleanupInterval);
       cleanupInterval = null;
     }
-
     var topic = 'cachechat-v1-' + slugify(room);
     currentTopic = topic;
     roomLabel.textContent = '#' + room;
     setStatus('connecting', '[connecting]');
     messagesEl.innerHTML = '';
     addLogLine('menghubungkan ke #' + room + '...', 'info');
-
     var joined = false;
     if (source) source.close();
     source = new EventSource('https://ntfy.sh/' + topic + '/sse');
-
     source.onopen = function() {
       setStatus('live', '[online]');
       if (!joined) {
         joined = true;
         publish(topic, { type: 'join', u: name, t: Date.now(), c: clientId });
-        keepAliveInterval = setInterval(sendKeepAlive, 10000);
-        cleanupInterval = setInterval(cleanupOfflineUsers, 5000);
+        keepAliveInterval = setInterval(sendKeepAlive, 600000);
+        cleanupInterval = setInterval(cleanupOfflineUsers, 15000);
       }
     };
-
     source.onerror = function() {
       setStatus('off', '[offline]');
       addLogLine('koneksi terputus, mencoba lagi...', 'error');
     };
-
     source.onmessage = function(evt) {
       try {
         var payload = JSON.parse(evt.data);
