@@ -1121,6 +1121,7 @@ body::before {
   var onlineUsers = {};
   var myName = '';
   var userLastSeen = {};
+  var cleanupInterval = null;
 
   var cache = {
     get: function(k) { return sessionStorage.getItem('cachechat_' + k); },
@@ -1274,6 +1275,11 @@ body::before {
     if (data.type === 'chat' && data.m && data.u) {
       addChatMessage(data);
       userLastSeen[data.u] = now;
+      if (!onlineUsers[data.u] && data.u !== myName) {
+        onlineUsers[data.u] = true;
+        updateOnlineUsers();
+        addLogLine(data.u + ' bergabung ke channel', 'join');
+      }
     } else if (data.type === 'join' && data.u) {
       onlineUsers[data.u] = true;
       userLastSeen[data.u] = now;
@@ -1287,6 +1293,13 @@ body::before {
       updateOnlineUsers();
       if (data.u !== myName) {
         addLogLine(data.u + ' keluar dari channel', 'leave');
+      }
+    } else if (data.type === 'ping' && data.u) {
+      userLastSeen[data.u] = now;
+      if (!onlineUsers[data.u] && data.u !== myName) {
+        onlineUsers[data.u] = true;
+        updateOnlineUsers();
+        addLogLine(data.u + ' bergabung ke channel', 'join');
       }
     }
   }
@@ -1314,15 +1327,41 @@ body::before {
     }
   }
 
+  function cleanupOfflineUsers() {
+    var now = Date.now();
+    var timeout = 30000;
+    var changed = false;
+    for (var name in userLastSeen) {
+      if (name === myName) continue;
+      if (now - userLastSeen[name] > timeout) {
+        if (onlineUsers[name]) {
+          delete onlineUsers[name];
+          changed = true;
+          addLogLine(name + ' keluar (timeout)', 'leave');
+        }
+        delete userLastSeen[name];
+      }
+    }
+    if (changed) {
+      updateOnlineUsers();
+    }
+  }
+
   function connect(room, name) {
     myName = name;
     onlineUsers = {};
     onlineUsers[name] = true;
+    userLastSeen = {};
+    userLastSeen[name] = Date.now();
     updateOnlineUsers();
 
     if (keepAliveInterval) {
       clearInterval(keepAliveInterval);
       keepAliveInterval = null;
+    }
+    if (cleanupInterval) {
+      clearInterval(cleanupInterval);
+      cleanupInterval = null;
     }
 
     var topic = 'cachechat-v1-' + slugify(room);
@@ -1341,7 +1380,8 @@ body::before {
       if (!joined) {
         joined = true;
         publish(topic, { type: 'join', u: name, t: Date.now(), c: clientId });
-        keepAliveInterval = setInterval(sendKeepAlive, 15000);
+        keepAliveInterval = setInterval(sendKeepAlive, 10000);
+        cleanupInterval = setInterval(cleanupOfflineUsers, 5000);
       }
     };
 
@@ -1355,15 +1395,6 @@ body::before {
         var payload = JSON.parse(evt.data);
         if (payload.event !== 'message' || !payload.message) return;
         var data = JSON.parse(payload.message);
-        if (data.type === 'ping') {
-          userLastSeen[data.u] = Date.now();
-          if (data.u !== myName && !onlineUsers[data.u]) {
-            onlineUsers[data.u] = true;
-            updateOnlineUsers();
-            addLogLine(data.u + ' bergabung ke channel', 'join');
-          }
-          return;
-        }
         handleIncoming(data);
       } catch (e) {}
     };
@@ -1529,8 +1560,13 @@ body::before {
       clearInterval(keepAliveInterval);
       keepAliveInterval = null;
     }
+    if (cleanupInterval) {
+      clearInterval(cleanupInterval);
+      cleanupInterval = null;
+    }
     currentTopic = null;
     onlineUsers = {};
+    userLastSeen = {};
     updateOnlineUsers();
     chatScreen.classList.remove('active');
     joinScreen.style.display = 'block';
