@@ -2,13 +2,17 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>BhiChat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 :root {
   --bg: #050706;
   --panel: #0a0f0c;
@@ -23,34 +27,48 @@
   --border: rgba(203, 214, 205, 0.14);
   --border-bright: rgba(255, 183, 3, 0.4);
 }
-html, body {
+html,
+body {
   height: 100%;
   width: 100%;
   background: var(--bg);
   font-family: 'JetBrains Mono', monospace;
   color: var(--text);
   overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
 }
 body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background: repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 3px);
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 1px, transparent 1px, transparent 3px);
   pointer-events: none;
   z-index: 5;
 }
 .stage {
   position: relative;
   z-index: 3;
-  height: 100vh;
+  height: 100%;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 8px;
 }
 @keyframes riseIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .win {
   position: relative;
@@ -59,8 +77,12 @@ body::before {
   background: linear-gradient(180deg, var(--panel), var(--panel-alt));
   border: 1px solid var(--border);
   border-radius: 6px;
-  box-shadow: 0 24px 70px rgba(0,0,0,0.6);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
   animation: riseIn 0.35s ease;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  overflow: hidden;
 }
 .corner {
   position: absolute;
@@ -69,236 +91,423 @@ body::before {
   pointer-events: none;
   border-color: var(--border-bright);
 }
-.corner.tl { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; border-radius: 6px 0 0 0; }
-.corner.tr { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; border-radius: 0 6px 0 0; }
-.corner.bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; border-radius: 0 0 0 6px; }
-.corner.br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; border-radius: 0 0 6px 0; }
+.corner.tl {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+  border-radius: 6px 0 0 0;
+}
+.corner.tr {
+  top: -1px;
+  right: -1px;
+  border-top: 2px solid;
+  border-right: 2px solid;
+  border-radius: 0 6px 0 0;
+}
+.corner.bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 2px solid;
+  border-left: 2px solid;
+  border-radius: 0 0 0 6px;
+}
+.corner.br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+  border-radius: 0 0 6px 0;
+}
 .titlebar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
+  gap: 6px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  min-height: 34px;
 }
-.tlight { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.tlight.r { background: #ff5f57; }
-.tlight.y { background: #febc2e; }
-.tlight.g { background: #28c840; }
+.tlight {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.tlight.r {
+  background: #ff5f57;
+}
+.tlight.y {
+  background: #febc2e;
+}
+.tlight.g {
+  background: #28c840;
+}
 .titletext {
-  margin-left: 6px;
-  font-size: 11px;
+  margin-left: 4px;
+  font-size: 9px;
   color: var(--text-dim);
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.board-body { padding: 26px 26px 28px; }
+.board-body {
+  padding: 16px 14px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow-y: auto;
+}
 .brand {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
   letter-spacing: 1px;
   color: var(--amber);
   text-shadow: 0 0 16px rgba(255, 183, 3, 0.35);
   line-height: 1;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 .cursor-blink {
   display: inline-block;
-  width: 9px;
-  height: 20px;
+  width: 7px;
+  height: 16px;
   background: var(--amber);
-  margin-left: 3px;
-  vertical-align: -3px;
+  margin-left: 2px;
+  vertical-align: -2px;
   animation: blink 1s steps(1) infinite;
 }
-@keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .cursor-blink { animation: none; opacity: 1; } }
-.field { margin-bottom: 16px; }
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cursor-blink {
+    animation: none;
+    opacity: 1;
+  }
+}
+.field {
+  margin-bottom: 10px;
+}
 .field label {
   display: block;
-  font-size: 11px;
+  font-size: 9px;
   color: var(--cyan);
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
-.field label::before { content: '$ '; color: var(--text-dim); }
+.field label::before {
+  content: '$ ';
+  color: var(--text-dim);
+}
 .field input {
   width: 100%;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--border);
   border-radius: 3px;
-  padding: 11px 12px;
+  padding: 8px 10px;
   color: var(--text);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13.5px;
+  font-size: 13px;
   outline: none;
   transition: border-color 0.15s ease;
+  -webkit-appearance: none;
+  appearance: none;
 }
-.field input:focus { border-color: var(--amber); }
-.field input::placeholder { color: var(--text-dim); }
-.field.err input { border-color: var(--red); }
+.field input:focus {
+  border-color: var(--amber);
+}
+.field input::placeholder {
+  color: var(--text-dim);
+}
+.field.err input {
+  border-color: var(--red);
+}
 .btn {
   width: 100%;
-  padding: 13px;
-  margin-top: 6px;
+  padding: 10px;
+  margin-top: 4px;
   background: var(--amber);
   color: #1a1200;
   border: none;
   border-radius: 3px;
   font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.5px;
   cursor: pointer;
   transition: box-shadow 0.15s ease, transform 0.1s ease;
+  touch-action: manipulation;
 }
-.btn:hover { box-shadow: 0 8px 22px rgba(255, 183, 3, 0.3); }
-.btn:active { transform: scale(0.98); }
+.btn:hover {
+  box-shadow: 0 8px 22px rgba(255, 183, 3, 0.3);
+}
+.btn:active {
+  transform: scale(0.98);
+}
 #chat-screen {
   display: none;
   width: 100%;
-  max-width: 460px;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
-#chat-screen.active { display: flex; animation: riseIn 0.35s ease; }
+#chat-screen.active {
+  display: flex;
+  animation: riseIn 0.35s ease;
+}
 .chat-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 8px;
+  padding: 6px 10px;
+  flex-shrink: 0;
+  min-height: 36px;
 }
-.header-info { flex: 1; }
-.room-tag { font-size: 15px; color: var(--amber); font-weight: 600; }
+.header-info {
+  flex: 1;
+  min-width: 0;
+}
+.room-tag {
+  font-size: 13px;
+  color: var(--amber);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .status {
-  font-size: 10.5px;
-  letter-spacing: 0.5px;
-  margin-top: 3px;
+  font-size: 8px;
+  letter-spacing: 0.3px;
+  margin-top: 1px;
 }
-.status .off { color: var(--red); }
-.status .connecting { color: var(--amber-dim); }
-.status .live { color: var(--green); }
+.status .off {
+  color: var(--red);
+}
+.status .connecting {
+  color: var(--amber-dim);
+}
+.status .live {
+  color: var(--green);
+}
 .leave {
   background: none;
   border: 1px solid var(--border);
   color: var(--text-dim);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10.5px;
-  padding: 7px 11px;
+  font-size: 9px;
+  padding: 4px 7px;
   border-radius: 3px;
   cursor: pointer;
   transition: border-color 0.15s ease, color 0.15s ease;
+  touch-action: manipulation;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
-.leave:hover { border-color: var(--red); color: var(--red); }
+.leave:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
 #messages {
-  flex: 1;
+  flex: 1 1 auto;
   overflow-y: auto;
-  padding: 16px 18px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  min-height: 200px;
-  max-height: 500px;
+  min-height: 30px;
+  -webkit-overflow-scrolling: touch;
 }
-#messages::-webkit-scrollbar { width: 6px; }
-#messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+#messages::-webkit-scrollbar {
+  width: 3px;
+}
+#messages::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
 .empty-state {
   margin: auto;
   text-align: center;
   color: var(--text-dim);
-  font-size: 12px;
-  line-height: 1.8;
+  font-size: 11px;
+  line-height: 1.6;
 }
-.empty-state .glyph { color: var(--amber-dim); margin-bottom: 6px; }
+.empty-state .glyph {
+  color: var(--amber-dim);
+  margin-bottom: 3px;
+}
 .row {
   display: flex;
   align-items: flex-start;
-  gap: 9px;
-  max-width: 84%;
+  gap: 5px;
+  max-width: 98%;
 }
-.row.own { align-self: flex-end; flex-direction: row-reverse; }
+.row.own {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
 .avatar-photo {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: #ffffff;
   overflow: hidden;
-  border: 2px solid;
+  border: 1.5px solid;
   margin-top: 1px;
 }
-.avatar-photo img { width: 100%; height: 100%; object-fit: cover; }
-@keyframes writeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
-.msg-col { animation: writeIn 0.2s ease; }
-.who { font-size: 10.5px; margin-bottom: 3px; padding: 0 2px; }
-.row.own .who { text-align: right; }
+.avatar-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+@keyframes writeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.msg-col {
+  animation: writeIn 0.2s ease;
+  min-width: 0;
+}
+.who {
+  font-size: 9px;
+  margin-bottom: 1px;
+  padding: 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row.own .who {
+  text-align: right;
+}
 .bubble {
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   border-left: 2px solid var(--amber-dim);
   border-radius: 3px;
-  padding: 8px 11px;
-  font-size: 13px;
-  line-height: 1.5;
+  padding: 4px 7px;
+  font-size: 12px;
+  line-height: 1.4;
   word-wrap: break-word;
   white-space: pre-wrap;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 .bubble img {
-  max-width: 220px;
-  max-height: 200px;
+  max-width: 100%;
+  max-height: 140px;
   border-radius: 4px;
-  margin-top: 4px;
+  margin-top: 3px;
   display: block;
+  height: auto;
 }
-.row.own .bubble { border-left: none; border-right: 2px solid var(--cyan); background: rgba(77,216,208,0.06); }
-.time { font-size: 9px; color: var(--text-dim); margin-top: 3px; padding: 0 2px; }
-.row.own .time { text-align: right; }
-.logline { 
-  font-size: 11px; 
-  padding: 0 2px; 
+.row.own .bubble {
+  border-left: none;
+  border-right: 2px solid var(--cyan);
+  background: rgba(77, 216, 208, 0.06);
+}
+.time {
+  font-size: 8px;
+  color: var(--text-dim);
+  margin-top: 1px;
+  padding: 0 2px;
+  white-space: nowrap;
+}
+.row.own .time {
+  text-align: right;
+}
+.logline {
+  font-size: 10px;
+  padding: 0 2px;
+  word-break: break-word;
   opacity: 1;
   transition: opacity 0.5s ease;
 }
 .logline.fade-out {
   opacity: 0;
 }
-.logline.info { color: var(--text-dim); }
-.logline.join { color: var(--green); }
-.logline.leave { color: var(--red); }
-.logline.error { color: var(--red); }
+.logline.info {
+  color: var(--text-dim);
+}
+.logline.join {
+  color: var(--green);
+}
+.logline.leave {
+  color: var(--red);
+}
+.logline.error {
+  color: var(--red);
+}
 .composer {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 13px 16px;
+  gap: 4px;
+  padding: 6px 8px;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  min-height: 38px;
 }
-.prompt { color: var(--cyan); font-size: 13px; flex-shrink: 0; }
+.prompt {
+  color: var(--cyan);
+  font-size: 12px;
+  flex-shrink: 0;
+}
 .composer input[type="text"] {
   flex: 1;
+  min-width: 40px;
   background: transparent;
   border: none;
   color: var(--text);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13.5px;
+  font-size: 13px;
   outline: none;
+  padding: 4px 0;
+  min-height: 26px;
 }
-.composer input::placeholder { color: var(--text-dim); }
+.composer input[type="text"]::placeholder {
+  color: var(--text-dim);
+}
 .composer button {
   background: none;
   border: 1px solid var(--border-bright);
   color: var(--amber);
   border-radius: 3px;
-  padding: 7px 14px;
+  padding: 4px 8px;
   font-family: 'JetBrains Mono', monospace;
   font-weight: 600;
-  font-size: 11.5px;
+  font-size: 10px;
   cursor: pointer;
   transition: background 0.15s ease;
+  touch-action: manipulation;
+  white-space: nowrap;
+  min-height: 26px;
 }
-.composer button:hover { background: rgba(255,183,3,0.08); }
-.composer button:active { transform: scale(0.96); }
+.composer button:hover {
+  background: rgba(255, 183, 3, 0.08);
+}
+.composer button:active {
+  transform: scale(0.96);
+}
 .upload-wrap {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
+  flex-shrink: 0;
 }
 .upload-wrap input[type="file"] {
   display: none;
@@ -307,46 +516,59 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: rgba(255,255,255,0.03);
+  width: 26px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   border-radius: 3px;
   color: var(--text-dim);
-  font-size: 16px;
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
+  touch-action: manipulation;
 }
 .upload-label:hover {
   border-color: var(--cyan);
   color: var(--cyan);
-  background: rgba(77,216,208,0.06);
+  background: rgba(77, 216, 208, 0.06);
 }
 .upload-label:active {
   transform: scale(0.92);
 }
 .upload-label svg {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   fill: currentColor;
 }
 .upload-progress {
   display: none;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border: 2px solid var(--border);
   border-top-color: var(--amber);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
 }
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
+/* Desktop */
 @media (min-width: 769px) {
+  .stage {
+    padding: 20px;
+  }
   .win {
     max-width: 520px;
+    max-height: 90vh;
+    border-radius: 6px;
+  }
+  .corner {
+    display: block;
   }
   #chat-screen {
     max-width: 520px;
@@ -354,6 +576,8 @@ body::before {
   #messages {
     max-height: 500px;
     min-height: 400px;
+    padding: 16px 18px;
+    gap: 12px;
   }
   .bubble {
     font-size: 14px;
@@ -365,162 +589,430 @@ body::before {
   }
   .row {
     max-width: 78%;
-  }
-  .composer input[type="text"] {
-    font-size: 14px;
+    gap: 9px;
   }
   .brand {
     font-size: 28px;
   }
+  .board-body {
+    padding: 30px 28px 34px;
+  }
+  .titlebar {
+    padding: 10px 14px;
+    min-height: 40px;
+  }
+  .titletext {
+    font-size: 11px;
+  }
+  .tlight {
+    width: 10px;
+    height: 10px;
+  }
+  .chat-header {
+    padding: 12px 16px;
+    min-height: 44px;
+  }
+  .room-tag {
+    font-size: 15px;
+  }
+  .status {
+    font-size: 10.5px;
+  }
+  .leave {
+    font-size: 10.5px;
+    padding: 7px 11px;
+  }
+  .avatar-photo {
+    width: 28px;
+    height: 28px;
+    border-width: 2px;
+  }
+  .who {
+    font-size: 10.5px;
+  }
+  .time {
+    font-size: 9px;
+  }
+  .logline {
+    font-size: 11px;
+  }
+  .composer {
+    padding: 13px 16px;
+    gap: 8px;
+    min-height: 44px;
+  }
+  .prompt {
+    font-size: 13px;
+  }
+  .composer input[type="text"] {
+    font-size: 13.5px;
+    min-height: 30px;
+  }
+  .composer button {
+    font-size: 11.5px;
+    padding: 7px 14px;
+    min-height: 30px;
+  }
+  .upload-label {
+    width: 32px;
+    height: 32px;
+  }
+  .upload-label svg {
+    width: 18px;
+    height: 18px;
+  }
+  .upload-progress {
+    width: 32px;
+    height: 32px;
+  }
+  .field input {
+    font-size: 13.5px;
+    padding: 11px 12px;
+  }
+  .btn {
+    font-size: 13px;
+    padding: 13px;
+  }
+  .field label {
+    font-size: 11px;
+  }
 }
 
+/* Mobile */
 @media (max-width: 768px) {
   .stage {
-    padding: 10px;
+    padding: 0;
   }
   .win {
     max-width: 100%;
-    border-radius: 4px;
+    border-radius: 0;
     height: 100%;
     max-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    border: none;
+    box-shadow: none;
   }
   .corner {
     display: none;
   }
-  .board-body {
-    padding: 20px 16px 24px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
   #chat-screen {
     max-width: 100%;
     height: 100%;
-    max-height: 100vh;
-    display: none;
-    flex-direction: column;
-  }
-  #chat-screen.active {
-    display: flex;
   }
   #messages {
     flex: 1;
     max-height: none;
-    min-height: 100px;
-    padding: 12px 14px;
-    gap: 10px;
+    min-height: 30px;
+    padding: 6px 8px;
+    gap: 5px;
   }
   .row {
-    max-width: 90%;
+    max-width: 98%;
+    gap: 4px;
   }
   .bubble {
     font-size: 12px;
-    padding: 6px 10px;
+    padding: 4px 6px;
+    border-left-width: 2px;
   }
   .bubble img {
-    max-width: 200px;
-    max-height: 180px;
+    max-width: 160px;
+    max-height: 130px;
   }
   .composer {
-    padding: 10px 12px;
-    gap: 6px;
-    flex-wrap: wrap;
+    padding: 4px 6px;
+    gap: 3px;
+    min-height: 34px;
   }
   .composer input[type="text"] {
     font-size: 14px;
-    padding: 4px 0;
-    min-width: 60px;
+    padding: 3px 0;
+    min-height: 24px;
   }
   .composer button {
-    font-size: 10.5px;
-    padding: 6px 10px;
+    font-size: 9px;
+    padding: 3px 6px;
+    min-height: 24px;
   }
   .upload-label {
-    width: 30px;
-    height: 30px;
-  }
-  .upload-label svg {
-    width: 16px;
-    height: 16px;
-  }
-  .upload-progress {
-    width: 30px;
-    height: 30px;
-  }
-  .brand {
-    font-size: 24px;
-  }
-  .field input {
-    font-size: 13px;
-    padding: 10px 12px;
-  }
-  .btn {
-    font-size: 12px;
-    padding: 12px;
-  }
-  .chat-header {
-    padding: 10px 12px;
-  }
-  .room-tag {
-    font-size: 14px;
-  }
-  .titlebar {
-    padding: 8px 12px;
-  }
-  .titletext {
-    font-size: 10px;
-  }
-  .leave {
-    font-size: 10px;
-    padding: 5px 9px;
-  }
-  .avatar-photo {
     width: 24px;
     height: 24px;
   }
+  .upload-label svg {
+    width: 13px;
+    height: 13px;
+  }
+  .upload-progress {
+    width: 24px;
+    height: 24px;
+  }
+  .titlebar {
+    padding: 4px 8px;
+    min-height: 30px;
+  }
+  .tlight {
+    width: 7px;
+    height: 7px;
+  }
+  .titletext {
+    font-size: 8px;
+  }
+  .chat-header {
+    padding: 4px 8px;
+    min-height: 32px;
+  }
+  .room-tag {
+    font-size: 12px;
+  }
+  .status {
+    font-size: 7px;
+  }
+  .leave {
+    font-size: 8px;
+    padding: 3px 6px;
+  }
+  .avatar-photo {
+    width: 18px;
+    height: 18px;
+    border-width: 1.5px;
+  }
   .who {
-    font-size: 10px;
+    font-size: 8px;
   }
   .time {
-    font-size: 8.5px;
+    font-size: 7px;
   }
   .logline {
-    font-size: 10px;
+    font-size: 9px;
+  }
+  .brand {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  .board-body {
+    padding: 12px 10px 16px;
+  }
+  .field {
+    margin-bottom: 8px;
+  }
+  .field input {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+  .btn {
+    font-size: 11px;
+    padding: 8px;
+  }
+  .prompt {
+    font-size: 11px;
   }
 }
 
 @media (max-width: 400px) {
-  .stage { padding: 5px; }
-  .board-body { padding: 14px 12px 18px; }
-  .brand { font-size: 20px; margin-bottom: 14px; }
-  .field { margin-bottom: 12px; }
-  .field input { font-size: 12px; padding: 8px 10px; }
-  .btn { font-size: 11px; padding: 10px; }
-  .composer { padding: 8px 10px; gap: 4px; }
-  .composer input[type="text"] { font-size: 13px; }
-  .composer button { font-size: 10px; padding: 5px 8px; }
-  .upload-wrap { order: 3; flex: 1; justify-content: flex-end; }
-  .composer button { order: 2; }
-  #messages { padding: 8px 10px; gap: 8px; }
-  .bubble { font-size: 11px; padding: 5px 8px; }
-  .row { max-width: 95%; }
+  .titlebar {
+    padding: 3px 6px;
+    min-height: 26px;
+  }
+  .tlight {
+    width: 6px;
+    height: 6px;
+  }
+  .titletext {
+    font-size: 7px;
+  }
+  .chat-header {
+    padding: 3px 6px;
+    min-height: 28px;
+    gap: 5px;
+  }
+  .room-tag {
+    font-size: 10px;
+  }
+  .status {
+    font-size: 6px;
+  }
+  .leave {
+    font-size: 7px;
+    padding: 2px 5px;
+  }
+  #messages {
+    padding: 4px 6px;
+    gap: 4px;
+  }
+  .row {
+    gap: 3px;
+    max-width: 100%;
+  }
+  .bubble {
+    font-size: 10px;
+    padding: 3px 5px;
+  }
+  .bubble img {
+    max-width: 120px;
+    max-height: 100px;
+  }
+  .avatar-photo {
+    width: 16px;
+    height: 16px;
+    border-width: 1px;
+  }
+  .who {
+    font-size: 7px;
+  }
+  .time {
+    font-size: 6px;
+  }
+  .logline {
+    font-size: 8px;
+  }
+  .composer {
+    padding: 3px 4px;
+    gap: 2px;
+    min-height: 28px;
+  }
+  .prompt {
+    font-size: 9px;
+  }
+  .composer input[type="text"] {
+    font-size: 12px;
+    padding: 2px 0;
+    min-height: 20px;
+  }
+  .composer button {
+    font-size: 8px;
+    padding: 2px 5px;
+    min-height: 20px;
+  }
+  .upload-label {
+    width: 20px;
+    height: 20px;
+  }
+  .upload-label svg {
+    width: 11px;
+    height: 11px;
+  }
+  .upload-progress {
+    width: 20px;
+    height: 20px;
+    border-width: 1.5px;
+  }
+  .brand {
+    font-size: 17px;
+    margin-bottom: 8px;
+  }
+  .board-body {
+    padding: 8px 6px 12px;
+  }
+  .field input {
+    font-size: 11px;
+    padding: 5px 6px;
+  }
+  .btn {
+    font-size: 10px;
+    padding: 6px;
+  }
 }
 
-@media (max-height: 600px) {
-  .board-body { padding: 14px 16px 18px; }
-  .brand { font-size: 20px; margin-bottom: 12px; }
-  .field { margin-bottom: 10px; }
-  .field input { padding: 8px 10px; font-size: 12px; }
-  .btn { padding: 10px; font-size: 12px; }
-  .composer { padding: 6px 10px; }
-  #messages { padding: 8px 12px; gap: 6px; min-height: 60px; }
-  .chat-header { padding: 6px 12px; }
-  .titlebar { padding: 6px 12px; }
-  .row { max-width: 95%; }
-  .bubble { font-size: 11px; padding: 5px 8px; }
+@media (max-height: 500px) {
+  .board-body {
+    padding: 6px 8px 10px;
+  }
+  .brand {
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+  .field {
+    margin-bottom: 5px;
+  }
+  .field input {
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+  .btn {
+    padding: 5px;
+    font-size: 10px;
+  }
+  .titlebar {
+    padding: 2px 6px;
+    min-height: 22px;
+  }
+  .tlight {
+    width: 5px;
+    height: 5px;
+  }
+  .titletext {
+    font-size: 7px;
+  }
+  .chat-header {
+    padding: 2px 6px;
+    min-height: 24px;
+  }
+  .room-tag {
+    font-size: 10px;
+  }
+  .status {
+    font-size: 6px;
+  }
+  .leave {
+    font-size: 7px;
+    padding: 2px 4px;
+  }
+  #messages {
+    padding: 3px 5px;
+    gap: 3px;
+    min-height: 20px;
+  }
+  .bubble {
+    font-size: 9px;
+    padding: 2px 4px;
+  }
+  .bubble img {
+    max-width: 100px;
+    max-height: 80px;
+  }
+  .avatar-photo {
+    width: 14px;
+    height: 14px;
+    border-width: 1px;
+  }
+  .who {
+    font-size: 7px;
+  }
+  .time {
+    font-size: 6px;
+  }
+  .logline {
+    font-size: 7px;
+  }
+  .composer {
+    padding: 2px 4px;
+    min-height: 24px;
+    gap: 2px;
+  }
+  .prompt {
+    font-size: 9px;
+  }
+  .composer input[type="text"] {
+    font-size: 11px;
+    padding: 2px 0;
+    min-height: 18px;
+  }
+  .composer button {
+    font-size: 7px;
+    padding: 2px 4px;
+    min-height: 18px;
+  }
+  .upload-label {
+    width: 18px;
+    height: 18px;
+  }
+  .upload-label svg {
+    width: 10px;
+    height: 10px;
+  }
+  .upload-progress {
+    width: 18px;
+    height: 18px;
+  }
 }
 </style>
 </head>
@@ -576,7 +1068,7 @@ body::before {
 </div>
 
 <script>
-(function () {
+(function() {
   var joinScreen = document.getElementById('join-screen');
   var chatScreen = document.getElementById('chat-screen');
   var roomField = document.getElementById('room-field');
@@ -601,8 +1093,8 @@ body::before {
   var fadeTimeouts = {};
 
   var cache = {
-    get: function (k) { return sessionStorage.getItem('cachechat_' + k); },
-    set: function (k, v) { sessionStorage.setItem('cachechat_' + k, v); }
+    get: function(k) { return sessionStorage.getItem('cachechat_' + k); },
+    set: function(k, v) { sessionStorage.setItem('cachechat_' + k, v); }
   };
 
   var clientId = cache.get('cid');
@@ -618,8 +1110,8 @@ body::before {
   var currentTopic = null;
 
   function escapeHtml(s) {
-    return s.replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    return s.replace(/[&<>"']/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } [c];
     });
   }
 
@@ -654,7 +1146,6 @@ body::before {
     el.textContent = sym + ' ' + text;
     messagesEl.appendChild(el);
     scrollDown();
-    
     if (kind === 'error' || kind === 'info') {
       var id = 'fade-' + Date.now() + '-' + Math.random();
       el.dataset.fadeId = id;
@@ -673,10 +1164,8 @@ body::before {
     clearEmptyState();
     var isOwn = data.c === clientId;
     var col = colorFor(data.u);
-
     var row = document.createElement('div');
     row.className = 'row' + (isOwn ? ' own' : '');
-
     var tag = document.createElement('div');
     tag.className = 'avatar-photo';
     tag.style.borderColor = 'var(' + col + ')';
@@ -684,22 +1173,17 @@ body::before {
     tagImg.src = 'https://c.top4top.io/p_3872w5pl31.png';
     tagImg.alt = data.u;
     tag.appendChild(tagImg);
-
     var msgCol = document.createElement('div');
     msgCol.className = 'msg-col';
-
     var who = document.createElement('div');
     who.className = 'who';
     who.style.color = 'var(' + col + ')';
     who.textContent = data.u;
-
     var bubble = document.createElement('div');
     bubble.className = 'bubble';
-
     var content = data.m;
     var isImageUrl = content.match(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i);
     var isImgbbUrl = content.match(/^https?:\/\/i\.ibb\.co(\.com)?\/.+/i);
-    
     if (isImageUrl || isImgbbUrl) {
       var url = content;
       if (isImgbbUrl && !url.includes('.com')) {
@@ -724,12 +1208,10 @@ body::before {
     } else {
       bubble.innerHTML = escapeHtml(content);
     }
-
     var time = document.createElement('div');
     time.className = 'time';
     var d = new Date(data.t);
     time.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
     msgCol.appendChild(who);
     msgCol.appendChild(bubble);
     msgCol.appendChild(time);
@@ -774,26 +1256,21 @@ body::before {
     setStatus('connecting', '[connecting]');
     messagesEl.innerHTML = '';
     addLogLine('menghubungkan ke #' + room + '...', 'info');
-
     var joined = false;
-
     if (source) source.close();
     source = new EventSource('https://ntfy.sh/' + topic + '/sse');
-
-    source.onopen = function () {
+    source.onopen = function() {
       setStatus('live', '[online]');
       if (!joined) {
         joined = true;
         publish(topic, { type: 'join', u: name, t: Date.now(), c: clientId });
       }
     };
-
-    source.onerror = function () {
+    source.onerror = function() {
       setStatus('off', '[offline]');
       addLogLine('koneksi terputus, mencoba lagi...', 'error');
     };
-
-    source.onmessage = function (evt) {
+    source.onmessage = function(evt) {
       try {
         var payload = JSON.parse(evt.data);
         if (payload.event !== 'message' || !payload.message) return;
@@ -806,7 +1283,7 @@ body::before {
   function sendMessage(text) {
     if (!currentTopic || !text.trim()) return;
     var payload = { type: 'chat', u: nameInput.value.trim(), m: text.trim(), t: Date.now(), c: clientId };
-    publish(currentTopic, payload).catch(function () {
+    publish(currentTopic, payload).catch(function() {
       addLogLine('gagal mengirim pesan', 'error');
     });
   }
@@ -822,15 +1299,14 @@ body::before {
   }
 
   function resizeImage(file, maxWidth, maxHeight, quality) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
       var reader = new FileReader();
-      reader.onload = function (e) {
+      reader.onload = function(e) {
         var img = new Image();
-        img.onload = function () {
+        img.onload = function() {
           var canvas = document.createElement('canvas');
           var width = img.width;
           var height = img.height;
-
           if (width > height) {
             if (width > maxWidth) {
               height = Math.round(height * (maxWidth / width));
@@ -842,13 +1318,11 @@ body::before {
               height = maxHeight;
             }
           }
-
           canvas.width = width;
           canvas.height = height;
           var ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
-
-          canvas.toBlob(function (blob) {
+          canvas.toBlob(function(blob) {
             if (!blob) {
               reject(new Error('Gagal mengompres gambar'));
               return;
@@ -856,12 +1330,12 @@ body::before {
             resolve(blob);
           }, 'image/jpeg', quality);
         };
-        img.onerror = function () {
+        img.onerror = function() {
           reject(new Error('Gagal memuat gambar'));
         };
         img.src = e.target.result;
       };
-      reader.onerror = function () {
+      reader.onerror = function() {
         reject(new Error('Gagal membaca file'));
       };
       reader.readAsDataURL(file);
@@ -874,87 +1348,75 @@ body::before {
       addLogLine('Anda Tidak Memiliki Akses', 'error');
       return;
     }
-
     var now = Date.now();
     if (now - lastUploadTime < 10000) {
       var wait = 10 - Math.floor((now - lastUploadTime) / 1000);
       addLogLine('tunggu ' + wait + ' detik', 'error');
       return;
     }
-
-    resizeImage(file, 800, 800, 0.7)
-      .then(function (resizedBlob) {
-        return new Promise(function (resolve, reject) {
-          var reader = new FileReader();
-          reader.onload = function (e) {
-            resolve(e.target.result.split(',')[1]);
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(resizedBlob);
-        });
-      })
-      .then(function (base64) {
-        var formData = new FormData();
-        formData.append('key', IMGBB_API_KEY);
-        formData.append('image', base64);
-
-        showUploadProgress(true);
-
-        return fetch(IMGBB_URL, {
-          method: 'POST',
-          body: formData
-        });
-      })
-      .then(function (res) {
-        if (!res.ok) {
-          return res.json().then(function (errData) {
-            throw new Error(errData.error?.message || 'Upload gagal');
-          });
-        }
-        return res.json();
-      })
-      .then(function (data) {
-        showUploadProgress(false);
-        lastUploadTime = Date.now();
-        if (data && data.data && data.data.url) {
-          var imageUrl = data.data.url;
-          if (imageUrl.includes('i.ibb.co') && !imageUrl.includes('.com')) {
-            imageUrl = imageUrl.replace('i.ibb.co', 'i.ibb.co.com');
-          }
-          sendMessage(imageUrl);
-        } else {
-          throw new Error('Respons tidak valid');
-        }
-      })
-      .catch(function (err) {
-        showUploadProgress(false);
-        addLogLine('gagal upload: ' + err.message, 'error');
-        console.error('Upload error:', err);
+    resizeImage(file, 800, 800, 0.7).then(function(resizedBlob) {
+      return new Promise(function(resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          resolve(e.target.result.split(',')[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(resizedBlob);
       });
+    }).then(function(base64) {
+      var formData = new FormData();
+      formData.append('key', IMGBB_API_KEY);
+      formData.append('image', base64);
+      showUploadProgress(true);
+      return fetch(IMGBB_URL, {
+        method: 'POST',
+        body: formData
+      });
+    }).then(function(res) {
+      if (!res.ok) {
+        return res.json().then(function(errData) {
+          throw new Error(errData.error?.message || 'Upload gagal');
+        });
+      }
+      return res.json();
+    }).then(function(data) {
+      showUploadProgress(false);
+      lastUploadTime = Date.now();
+      if (data && data.data && data.data.url) {
+        var imageUrl = data.data.url;
+        if (imageUrl.includes('i.ibb.co') && !imageUrl.includes('.com')) {
+          imageUrl = imageUrl.replace('i.ibb.co', 'i.ibb.co.com');
+        }
+        sendMessage(imageUrl);
+      } else {
+        throw new Error('Respons tidak valid');
+      }
+    }).catch(function(err) {
+      showUploadProgress(false);
+      addLogLine('gagal upload: ' + err.message, 'error');
+      console.error('Upload error:', err);
+    });
   }
 
-  fileInput.addEventListener('change', function (e) {
+  fileInput.addEventListener('change', function(e) {
     var file = e.target.files[0];
     if (!file) return;
-
     var validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(file.type)) {
       addLogLine('format tidak didukung (jpg, png, gif, webp)', 'error');
       fileInput.value = '';
       return;
     }
-
     if (file.size > 5 * 1024 * 1024) {
       addLogLine('ukuran terlalu besar (maks 5MB)', 'error');
       fileInput.value = '';
       return;
     }
-
     uploadImage(file);
     fileInput.value = '';
   });
 
-  joinBtn.addEventListener('click', function () {
+  joinBtn.addEventListener('click', function() {
     var room = roomInput.value.trim();
     var name = nameInput.value.trim();
     roomField.classList.toggle('err', !room);
@@ -968,7 +1430,7 @@ body::before {
     msgInput.focus();
   });
 
-  leaveBtn.addEventListener('click', function () {
+  leaveBtn.addEventListener('click', function() {
     if (currentTopic) {
       publish(currentTopic, { type: 'leave', u: nameInput.value.trim(), t: Date.now(), c: clientId });
     }
@@ -979,25 +1441,27 @@ body::before {
     joinScreen.style.display = 'block';
   });
 
-  sendBtn.addEventListener('click', function () {
+  sendBtn.addEventListener('click', function() {
     sendMessage(msgInput.value);
     msgInput.value = '';
     msgInput.focus();
   });
 
-  msgInput.addEventListener('keydown', function (e) {
+  msgInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
       sendMessage(msgInput.value);
       msgInput.value = '';
     }
   });
 
-  roomInput.addEventListener('keydown', function (e) {
+  roomInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') nameInput.focus();
   });
-  nameInput.addEventListener('keydown', function (e) {
+  nameInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') joinBtn.click();
   });
+
+  document.addEventListener('touchstart', function() {}, { passive: true });
 })();
 </script>
 </body>
