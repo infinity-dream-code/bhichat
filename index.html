@@ -250,11 +250,6 @@ body::before {
 .row.own .bubble { border-left: none; border-right: 2px solid var(--cyan); background: rgba(77,216,208,0.06); }
 .time { font-size: 9px; color: var(--text-dim); margin-top: 3px; padding: 0 2px; }
 .row.own .time { text-align: right; }
-.logline { font-size: 11px; padding: 0 2px; }
-.logline.info { color: var(--text-dim); }
-.logline.join { color: var(--green); }
-.logline.leave { color: var(--red); }
-.logline.error { color: var(--red); }
 .composer {
   display: flex;
   align-items: center;
@@ -383,7 +378,7 @@ body::before {
       <span class="prompt">$</span>
       <input id="msg-input" type="text" placeholder="tulis pesan..." maxlength="500" autocomplete="off">
       <div class="upload-wrap">
-        <label for="file-upload" class="upload-label" id="upload-btn" title="Upload gambar (hanya untuk user X0)">
+        <label for="file-upload" class="upload-label" id="upload-btn" title="Upload gambar">
           <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
         </label>
         <div class="upload-progress" id="upload-spinner"></div>
@@ -502,12 +497,32 @@ body::before {
     bubble.className = 'bubble';
 
     var content = data.m;
-    var imgMatch = content.match(/^!\[.*?\]\((.*?)\)$/);
-    if (imgMatch) {
+    var isImageUrl = content.match(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i);
+    var isImgbbUrl = content.match(/^https?:\/\/i\.ibb\.co(\.com)?\/.+/i);
+    
+    if (isImageUrl || isImgbbUrl) {
+      var url = content;
+      if (isImgbbUrl && !url.includes('.com')) {
+        url = url.replace('i.ibb.co', 'i.ibb.co.com');
+      }
       var img = document.createElement('img');
-      img.src = imgMatch[1];
+      img.src = url;
       img.alt = 'gambar';
       img.loading = 'lazy';
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '200px';
+      img.style.borderRadius = '4px';
+      img.onerror = function() {
+        this.style.display = 'none';
+        var link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.textContent = '📷 ' + url;
+        link.style.color = 'var(--cyan)';
+        link.style.textDecoration = 'underline';
+        link.style.wordBreak = 'break-all';
+        bubble.appendChild(link);
+      };
       bubble.appendChild(img);
     } else {
       bubble.innerHTML = escapeHtml(content);
@@ -659,14 +674,14 @@ body::before {
   function uploadImage(file) {
     var currentName = nameInput.value.trim();
     if (!currentName.includes('X0')) {
-      addLogLine('❌ Anda Tidak Memiliki Akses', 'error');
+      addLogLine('Anda Tidak Memiliki Akses', 'error');
       return;
     }
 
     var now = Date.now();
     if (now - lastUploadTime < 10000) {
       var wait = 10 - Math.floor((now - lastUploadTime) / 1000);
-      addLogLine('⏳ tunggu ' + wait + ' detik (cooldown 10s)', 'error');
+      addLogLine('tunggu ' + wait + ' detik', 'error');
       return;
     }
 
@@ -687,7 +702,6 @@ body::before {
         formData.append('image', base64);
 
         showUploadProgress(true);
-        addLogLine('📤 upload gambar (' + (base64.length / 1024).toFixed(1) + 'KB)...', 'info');
 
         return fetch(IMGBB_URL, {
           method: 'POST',
@@ -697,7 +711,7 @@ body::before {
       .then(function (res) {
         if (!res.ok) {
           return res.json().then(function (errData) {
-            throw new Error('ImgBB error: ' + (errData.error?.message || res.status));
+            throw new Error(errData.error?.message || 'Upload gagal');
           });
         }
         return res.json();
@@ -707,16 +721,17 @@ body::before {
         lastUploadTime = Date.now();
         if (data && data.data && data.data.url) {
           var imageUrl = data.data.url;
-          var imageMarkdown = '![' + file.name + '](' + imageUrl + ')';
-          sendMessage(imageMarkdown);
-          addLogLine('✅ gambar terunggah!', 'info');
+          if (imageUrl.includes('i.ibb.co') && !imageUrl.includes('.com')) {
+            imageUrl = imageUrl.replace('i.ibb.co', 'i.ibb.co.com');
+          }
+          sendMessage(imageUrl);
         } else {
           throw new Error('Respons tidak valid');
         }
       })
       .catch(function (err) {
         showUploadProgress(false);
-        addLogLine('❌ gagal upload: ' + err.message, 'error');
+        addLogLine('gagal upload: ' + err.message, 'error');
         console.error('Upload error:', err);
       });
   }
@@ -727,13 +742,13 @@ body::before {
 
     var validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      addLogLine('❌ format tidak didukung (jpg, png, gif, webp)', 'error');
+      addLogLine('format tidak didukung (jpg, png, gif, webp)', 'error');
       fileInput.value = '';
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      addLogLine('❌ ukuran terlalu besar (maks 5MB)', 'error');
+      addLogLine('ukuran terlalu besar (maks 5MB)', 'error');
       fileInput.value = '';
       return;
     }
