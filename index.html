@@ -251,7 +251,15 @@ body::before {
 .row.own .bubble { border-left: none; border-right: 2px solid var(--cyan); background: rgba(77,216,208,0.06); }
 .time { font-size: 9px; color: var(--text-dim); margin-top: 3px; padding: 0 2px; }
 .row.own .time { text-align: right; }
-.logline { font-size: 11px; padding: 0 2px; }
+.logline { 
+  font-size: 11px; 
+  padding: 0 2px; 
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+.logline.fade-out {
+  opacity: 0;
+}
 .logline.info { color: var(--text-dim); }
 .logline.join { color: var(--green); }
 .logline.leave { color: var(--red); }
@@ -336,7 +344,6 @@ body::before {
   to { transform: rotate(360deg); }
 }
 
-/* DESKTOP - Lebih besar dari 768px */
 @media (min-width: 769px) {
   .win {
     max-width: 520px;
@@ -367,7 +374,6 @@ body::before {
   }
 }
 
-/* MOBILE - Kurang dari 768px */
 @media (max-width: 768px) {
   .stage {
     padding: 10px;
@@ -592,6 +598,7 @@ body::before {
   var IMGBB_URL = 'https://api.imgbb.com/1/upload';
   var lastUploadTime = 0;
   var tagColors = ['--amber', '--cyan', '--green', '--red'];
+  var fadeTimeouts = {};
 
   var cache = {
     get: function (k) { return sessionStorage.getItem('cachechat_' + k); },
@@ -647,6 +654,19 @@ body::before {
     el.textContent = sym + ' ' + text;
     messagesEl.appendChild(el);
     scrollDown();
+    
+    if (kind === 'error' || kind === 'info') {
+      var id = 'fade-' + Date.now() + '-' + Math.random();
+      el.dataset.fadeId = id;
+      if (fadeTimeouts[id]) clearTimeout(fadeTimeouts[id]);
+      fadeTimeouts[id] = setTimeout(function() {
+        el.classList.add('fade-out');
+        setTimeout(function() {
+          if (el.parentNode) el.remove();
+          delete fadeTimeouts[id];
+        }, 500);
+      }, 5000);
+    }
   }
 
   function addChatMessage(data) {
