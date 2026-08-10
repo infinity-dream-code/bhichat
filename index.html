@@ -41,45 +41,6 @@ body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-user-drag: none;
-}
-input,
-textarea {
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
-  user-select: text !important;
-}
-#ss-shield {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647;
-  background: #000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.05s linear;
-}
-body.ss-lock #ss-shield {
-  opacity: 1;
-  pointer-events: auto;
-}
-body.ss-lock .stage {
-  filter: brightness(0);
-  opacity: 0;
-}
-@media print {
-  html, body, .stage, #ss-shield {
-    background: #000 !important;
-    color: transparent !important;
-  }
-  .stage, body > *:not(#ss-shield) {
-    display: none !important;
-  }
 }
 body::before {
   content: '';
@@ -1070,7 +1031,6 @@ body::before {
 </style>
 </head>
 <body>
-<div id="ss-shield" aria-hidden="true"></div>
 <div class="stage">
   <div class="win" id="join-screen">
     <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
@@ -1124,123 +1084,9 @@ body::before {
 </div>
 <script>
 (function() {
-  /* anti SS / rekam / klik kanan — deteren saja, tidak 100% di OS level */
-  var shieldTimer = null;
-  function lockScreen(ms) {
-    document.body.classList.add('ss-lock');
-    clearTimeout(shieldTimer);
-    if (ms) {
-      shieldTimer = setTimeout(function() {
-        document.body.classList.remove('ss-lock');
-      }, ms);
-    }
-  }
-  function unlockScreen() {
-    clearTimeout(shieldTimer);
-    document.body.classList.remove('ss-lock');
-  }
-  function isEditable(el) {
-    if (!el) return false;
-    var tag = (el.tagName || '').toLowerCase();
-    return tag === 'input' || tag === 'textarea' || el.isContentEditable;
-  }
-
   document.addEventListener('contextmenu', function(e) {
     e.preventDefault();
-    return false;
-  }, true);
-
-  document.addEventListener('selectstart', function(e) {
-    if (!isEditable(e.target)) e.preventDefault();
-  }, true);
-
-  document.addEventListener('dragstart', function(e) {
-    e.preventDefault();
-  }, true);
-
-  ['copy', 'cut', 'paste'].forEach(function(evt) {
-    document.addEventListener(evt, function(e) {
-      if (!isEditable(e.target)) e.preventDefault();
-    }, true);
   });
-
-  document.addEventListener('keydown', function(e) {
-    var key = e.key || '';
-    var code = e.keyCode || e.which;
-    var ctrl = e.ctrlKey || e.metaKey;
-    var shift = e.shiftKey;
-    var alt = e.altKey;
-
-    if (key === 'PrintScreen' || code === 44) {
-      e.preventDefault();
-      lockScreen(1200);
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText('');
-        }
-      } catch (err) {}
-      return false;
-    }
-
-    if (ctrl && !isEditable(e.target) && ['c', 'x', 'a', 's', 'p', 'u'].indexOf(key.toLowerCase()) !== -1) {
-      e.preventDefault();
-      return false;
-    }
-    if (ctrl && shift && ['i', 'j', 'c'].indexOf(key.toLowerCase()) !== -1) {
-      e.preventDefault();
-      return false;
-    }
-    if (ctrl && key.toLowerCase() === 'p') {
-      e.preventDefault();
-      return false;
-    }
-    if (key === 'F12' || code === 123) {
-      e.preventDefault();
-      return false;
-    }
-    if (alt && key === 'PrintScreen') {
-      e.preventDefault();
-      lockScreen(1200);
-      return false;
-    }
-  }, true);
-
-  document.addEventListener('keyup', function(e) {
-    if (e.key === 'PrintScreen' || e.keyCode === 44) {
-      lockScreen(1200);
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText('');
-        }
-      } catch (err) {}
-    }
-  }, true);
-
-  document.addEventListener('visibilitychange', function() {
-    if (document.hidden) lockScreen();
-    else unlockScreen();
-  });
-
-  window.addEventListener('blur', function() {
-    lockScreen();
-  });
-  window.addEventListener('focus', function() {
-    if (!document.hidden) unlockScreen();
-  });
-
-  window.addEventListener('beforeprint', function() {
-    lockScreen();
-  });
-  window.addEventListener('afterprint', function() {
-    unlockScreen();
-  });
-
-  /* blank content saat tab/window tidak fokus (mengganggu screen record & share) */
-  setInterval(function() {
-    if (document.hidden || !document.hasFocus()) {
-      document.body.classList.add('ss-lock');
-    }
-  }, 400);
 
   var joinScreen = document.getElementById('join-screen');
   var chatScreen = document.getElementById('chat-screen');
